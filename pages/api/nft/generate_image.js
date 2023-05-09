@@ -11,7 +11,10 @@ const handler = async (req, res) => {
         }
     ]
     const dalle2Prompt = await completions(messages)
-    res.status(200).json(await generate(dalle2Prompt, 3))
+    const result = {
+        'images': await generate(dalle2Prompt, 3)
+    }
+    res.status(200).json(result)
 }
 
 export default handler
