@@ -15,19 +15,6 @@ a {
   text-decoration: none;
 }
 
-.markdown-body.chatgpt {
-  width: 100%;
-  background-color:#444654;
-}
-
-.markdown-body.chatgpt.streaming.waiting:after,
-.markdown-body.chatgpt.streaming > :not(ol):not(ul):not(pre):last-child:after {
-  animation: flash 1s infinite;
-  content: "▋";
-  margin-left: 0.25rem;
-  vertical-align: baseline;
-}
-
 @keyframes flash {
   from,
   50%,

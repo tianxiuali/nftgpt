@@ -20,7 +20,7 @@ export default function SelectImg(props) {
     <div>
       {imgList.map((item, i) => (
         <div key={item} className={styles.wrapper} onClick={() => selectImg(i)}>
-          <img src={`data:image/png;base64,${item}`} />
+          <img src={item} />
           {selectIndex === i && <CheckCircleFilled className={styles.checked} />}
         </div>
       ))}
