@@ -1,5 +1,15 @@
 .container {
   height: 100vh;
-  padding: 0 200px;
   background-color: #343541;
+}
+
+.connect {
+  width: 768px;
+  padding: 20px 0 0 0;
+  margin: 0 auto;
+  text-align: right;
+
+  .inner {
+    display: inline-block;
+  }
 }

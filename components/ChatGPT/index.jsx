@@ -3,7 +3,7 @@ import { Input, Avatar, Button, Popconfirm, Typography, message } from 'antd'
 import { SendOutlined, ClearOutlined } from '@ant-design/icons'
 import styles from './style.module.scss'
 import Openai from '@/components/Icon/openai'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import Markdown from '@/components/Markdown'
 import classNames from 'classnames'
 
@@ -17,7 +17,28 @@ export default function ChatGPT() {
   const mainRef = useRef(null)
   const convRef = useRef(null)
   const [inputValue, setInputValue] = useState('')
-  const [conversation, setConversation] = useState([])
+  const [conversation, setConversation] = useState([
+    {
+      id: '1',
+      role: 'user',
+      content: '你好'
+    },
+    {
+      id: '2',
+      role: 'assistant',
+      content: '你好，我是ChatGPT，我可以回答你的问题'
+    },
+    {
+      id: '3',
+      role: 'user',
+      content: '你好'
+    },
+    {
+      id: '4',
+      role: 'assistant',
+      content: '你好，我是ChatGPT，我可以回答你的问题'
+    }
+  ])
   const [isStreaming, setIsStreaming] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
 
@@ -90,13 +111,13 @@ export default function ChatGPT() {
     localStorage.setItem('conversation', '')
   }
 
-  useEffect(() => {
-    clearConversation()
-    fetch('/api/openai/models')
-    setInterval(() => {
-      fetch('/api/openai/models')
-    }, 60000)
-  }, [])
+  // useEffect(() => {
+  //   clearConversation()
+  //   fetch('/api/openai/models')
+  //   setInterval(() => {
+  //     fetch('/api/openai/models')
+  //   }, 60000)
+  // }, [])
 
   return (
     <div className={styles.main} ref={mainRef}>
@@ -111,25 +132,27 @@ export default function ChatGPT() {
                 [styles.assistant]: role === 'assistant'
               })}
             >
-              {role === 'user' && (
-                <>
-                  <Avatar icon={<UserOutlined />} />
-                  <span className={styles.content}>{content}</span>
-                </>
-              )}
-              {role === 'assistant' && (
-                <>
-                  <Avatar style={{ backgroundColor: '#6ea194' }} icon={<Openai style={{ fontSize: 18 }} />} />
-                  <span className={styles.content}>
-                    <Markdown
-                      markdown={content}
-                      isChatGpt={true}
-                      isStreaming={isStreaming && i === conversation.length - 1}
-                      isWaiting={isWaiting && i === conversation.length - 1}
-                    />
-                  </span>
-                </>
-              )}
+              <div className={styles.inner}>
+                {role === 'user' && (
+                  <>
+                    <Avatar icon={<UserOutlined />} />
+                    <span className={styles.content}>{content}</span>
+                  </>
+                )}
+                {role === 'assistant' && (
+                  <>
+                    <Avatar style={{ backgroundColor: '#6ea194' }} icon={<Openai style={{ fontSize: 18 }} />} />
+                    <span className={styles.content}>
+                      <Markdown
+                        markdown={content}
+                        isChatGpt={true}
+                        isStreaming={isStreaming && i === conversation.length - 1}
+                        isWaiting={isWaiting && i === conversation.length - 1}
+                      />
+                    </span>
+                  </>
+                )}
+              </div>
             </li>
           )
         })}

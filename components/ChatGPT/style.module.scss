@@ -1,6 +1,5 @@
 .main {
   position: relative;
-  height: 100%;
   padding-bottom: 80px;
   background-color: #343541;
   overflow-y: auto;
@@ -11,12 +10,17 @@
   color: #ECECF1;
 
   & > li {
-    display: flex;
     padding: 16px;
-    gap: 16px;
 
     &.assistant {
       background-color: #444654;
+    }
+
+    .inner {
+      display: flex;
+      gap: 16px;
+      width: 768px;
+      margin: 0 auto;
     }
 
     .content {
@@ -38,16 +42,16 @@
 
 .bottom {
   position: fixed;
-  right: 0;
   bottom: 0;
+  left: 0;
   width: 100%;
-  padding: 20px 200px;
+  padding: 20px 0;
   text-align: center;
   background-color: #343541;
 
   :global {
     .ant-input-affix-wrapper {
-      max-width: 90%;
+      width: 768px;
     }
   }
 }
