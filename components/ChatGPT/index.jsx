@@ -57,40 +57,39 @@ export default function ChatGPT() {
       }, 100)
       setIsStreaming(true)
       setIsWaiting(true)
-      await generateImg(newConversation)
-      // const response = await fetch('/api/openai/chat', {
-      //   method: 'POST',
-      //   body: JSON.stringify({
-      //     messages: newConversation
-      //   })
-      // })
+      // await generateImg(newConversation)
+      const response = await fetch('/api/openai/chat', {
+        method: 'POST',
+        body: JSON.stringify({
+          messages: newConversation
+        })
+      })
       setIsWaiting(false)
-      // if (!response.ok) {
-      //   message.error('服务异常，请稍后再试')
-      //   newConversation = [...newConversation]
-      //   newConversation[newConversation.length - 1].content = 'Error'
-      //   setConversation(newConversation)
-      //   setIsStreaming(false)
-      //   return
-      // }
-      // const reader = response.body.getReader()
-      // const decoder = new TextDecoder()
-      // let result = ''
-      // while (true) {
-      //   const { done, value } = await reader.read()
-      //   if (done) {
-      //     break
-      //   }
-      //   result += decoder.decode(value)
-      //   newConversation = [...newConversation]
-      //   newConversation[newConversation.length - 1].content = result
-      //   setConversation(newConversation)
-      //   localStorage.setItem('conversation', JSON.stringify(newConversation))
-      //   if (mainRef?.current) {
-      //     mainRef.current.scrollTop = convRef.current.scrollHeight
-      //   }
-      // }
-      // console.log(result)
+      if (!response.ok) {
+        newConversation = [...newConversation]
+        newConversation[newConversation.length - 1].content = 'Error'
+        setConversation(newConversation)
+        setIsStreaming(false)
+        return
+      }
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let result = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) {
+          break
+        }
+        result += decoder.decode(value)
+        newConversation = [...newConversation]
+        newConversation[newConversation.length - 1].content = result
+        setConversation(newConversation)
+        localStorage.setItem('conversation', JSON.stringify(newConversation))
+        if (mainRef?.current) {
+          mainRef.current.scrollTop = convRef.current.scrollHeight
+        }
+      }
+      console.log(result)
       setIsStreaming(false)
     } catch (error) {
       console.log('error', error)
@@ -124,7 +123,7 @@ export default function ChatGPT() {
       {
         id: generateId(),
         role: 'user',
-        content: `<img style="width: 200px;" src="data:image/png;base64,${src}" />`
+        content: `<img style="width: 200px;" src="${src}" />`
       },
       {
         id: generateId(),
@@ -134,6 +133,16 @@ export default function ChatGPT() {
       }
     ]
     setConversation(newConversation)
+    await generateContract([src])
+  }
+
+  const generateContract = async (nftImages) => {
+    const resp = await fetch('/api/nft/generate_contract', {
+      method: 'POST',
+      body: JSON.stringify({
+        nftImages
+      })
+    })
   }
 
   useEffect(() => {

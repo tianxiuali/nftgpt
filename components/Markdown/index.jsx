@@ -19,7 +19,8 @@ export default function Markdown(props) {
       return ''
     }
   })
-  const result = md.use(markdownItCodeCopy).render(markdown)
+  // const result = md.use(markdownItCodeCopy).render(markdown)
+  const result = md.render(markdown)
 
   return (
     <div
