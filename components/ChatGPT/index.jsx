@@ -1,5 +1,5 @@
 import { UserOutlined } from '@ant-design/icons'
-import { Input, Avatar, Typography } from 'antd'
+import { Input, Avatar, Typography, Button } from 'antd'
 import { SendOutlined } from '@ant-design/icons'
 import styles from './style.module.scss'
 import Openai from '@/components/Icon/openai'
@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react'
 import Markdown from '@/components/Markdown'
 import SelectImg from '@/components/SelectImg'
 import classNames from 'classnames'
+import { useAccount } from 'wagmi'
 
 const { Title } = Typography
 
@@ -33,6 +34,7 @@ export default function ChatGPT() {
   ])
   const [isStreaming, setIsStreaming] = useState(false)
   const [isWaiting, setIsWaiting] = useState(false)
+  const { address } = useAccount()
 
   const sendQuestion = async () => {
     try {
@@ -57,39 +59,39 @@ export default function ChatGPT() {
       }, 100)
       setIsStreaming(true)
       setIsWaiting(true)
-      // await generateImg(newConversation)
-      const response = await fetch('/api/openai/chat', {
-        method: 'POST',
-        body: JSON.stringify({
-          messages: newConversation
-        })
-      })
+      await generateImg(newConversation)
+      // const response = await fetch('/api/openai/chat', {
+      //   method: 'POST',
+      //   body: JSON.stringify({
+      //     messages: newConversation
+      //   })
+      // })
       setIsWaiting(false)
-      if (!response.ok) {
-        newConversation = [...newConversation]
-        newConversation[newConversation.length - 1].content = 'Error'
-        setConversation(newConversation)
-        setIsStreaming(false)
-        return
-      }
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let result = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) {
-          break
-        }
-        result += decoder.decode(value)
-        newConversation = [...newConversation]
-        newConversation[newConversation.length - 1].content = result
-        setConversation(newConversation)
-        localStorage.setItem('conversation', JSON.stringify(newConversation))
-        if (mainRef?.current) {
-          mainRef.current.scrollTop = convRef.current.scrollHeight
-        }
-      }
-      console.log(result)
+      // if (!response.ok) {
+      //   newConversation = [...newConversation]
+      //   newConversation[newConversation.length - 1].content = 'Error'
+      //   setConversation(newConversation)
+      //   setIsStreaming(false)
+      //   return
+      // }
+      // const reader = response.body.getReader()
+      // const decoder = new TextDecoder()
+      // let result = ''
+      // while (true) {
+      //   const { done, value } = await reader.read()
+      //   if (done) {
+      //     break
+      //   }
+      //   result += decoder.decode(value)
+      //   newConversation = [...newConversation]
+      //   newConversation[newConversation.length - 1].content = result
+      //   setConversation(newConversation)
+      //   localStorage.setItem('conversation', JSON.stringify(newConversation))
+      //   if (mainRef?.current) {
+      //     mainRef.current.scrollTop = convRef.current.scrollHeight
+      //   }
+      // }
+      // console.log(result)
       setIsStreaming(false)
     } catch (error) {
       console.log('error', error)
@@ -133,16 +135,53 @@ export default function ChatGPT() {
       }
     ]
     setConversation(newConversation)
-    await generateContract([src])
+    await generateContract([src], newConversation)
   }
 
-  const generateContract = async (nftImages) => {
+  const generateContract = async (nftImages, newConversation) => {
     const resp = await fetch('/api/nft/generate_contract', {
       method: 'POST',
       body: JSON.stringify({
         nftImages
       })
     })
+    const { contract } = await resp.json()
+    if (contract) {
+      newConversation = [...newConversation]
+      newConversation[newConversation.length - 1].content = `\`\`\`solidity\n${contract}\n\`\`\``
+      newConversation[newConversation.length - 1].type = 'contract'
+      setConversation(newConversation)
+      if (mainRef?.current) {
+        mainRef.current.scrollTop = convRef.current.scrollHeight
+      }
+    }
+  }
+
+  const confirmContract = async contract => {
+    let newConversation = [...conversation]
+    newConversation.push({
+      id: generateId(),
+      role: 'assistant',
+      content: '',
+      type: 'md'
+    })
+    setConversation(newConversation)
+    const resp = await fetch('/api/nft/deploy_contract', {
+      method: 'POST',
+      body: JSON.stringify({
+        contract,
+        userAddress: address
+      })
+    })
+    const { openseaUrl } = await resp.json()
+    if (openseaUrl) {
+      newConversation = [...newConversation]
+      newConversation[newConversation.length - 1].content = `NFT已发布：[${openseaUrl}](${openseaUrl})`
+      setConversation(newConversation)
+      if (mainRef?.current) {
+        mainRef.current.scrollTop = convRef.current.scrollHeight
+      }
+    }
   }
 
   useEffect(() => {
@@ -177,18 +216,30 @@ export default function ChatGPT() {
                     <Avatar style={{ backgroundColor: '#6ea194' }} icon={<Openai style={{ fontSize: 18 }} />} />
                     <span className={styles.content}>
                       {type === 'img' && imgList?.length > 0 && (
-                        <div className={styles.images}>
-                          <h4>请选择一张图片：</h4>
+                        <div>
+                          <div>请选择一张图片：</div>
                           <SelectImg imgList={imgList} onSelect={onSelectImg} />
+                          <div>然后为您生成合约代码</div>
                         </div>
                       )}
-                      {type === 'md' && (
+                      {(type === 'md') && (
                         <Markdown
                           markdown={content}
                           isChatGpt={true}
                           isStreaming={isStreaming && i === conversation.length - 1}
                           isWaiting={isWaiting && i === conversation.length - 1}
                         />
+                      )}
+                      {type === 'contract' && (
+                        <div className={styles.contract}>
+                          <Markdown
+                            markdown={content}
+                            isChatGpt={true}
+                            isStreaming={isStreaming && i === conversation.length - 1}
+                            isWaiting={isWaiting && i === conversation.length - 1}
+                          />
+                          <Button onClick={() => confirmContract(content)}>确认代码</Button>
+                        </div>
                       )}
                     </span>
                   </>
@@ -201,7 +252,7 @@ export default function ChatGPT() {
       <div className={styles.bottom}>
         <Input
           size="large"
-          placeholder="请输入你的问题"
+          placeholder="请输入图片描述"
           suffix={inputValue ? <SendOutlined onClick={sendQuestion} /> : <SendOutlined style={{ color: '#666' }} />}
           value={inputValue}
           onChange={e => setInputValue(e.target.value)}

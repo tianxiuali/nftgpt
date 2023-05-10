@@ -17,7 +17,7 @@ export default function SelectImg(props) {
   }
 
   return (
-    <div>
+    <div className={styles.gallery}>
       {imgList.map((item, i) => (
         <div key={item} className={styles.wrapper} onClick={() => selectImg(i)}>
           <img src={item} />

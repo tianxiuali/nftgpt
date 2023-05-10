@@ -38,9 +38,11 @@
       }
     }
 
-    .images {
-      h4 {
-        padding-bottom: 20px;
+    .contract {
+      width: 100%;
+
+      & > button {
+        margin-top: 20px;
       }
     }
   }
