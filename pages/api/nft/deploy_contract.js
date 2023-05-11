@@ -40,7 +40,7 @@ const handler = async (req, res) => {
     // const result = {
     //     'images': await generate(dalle2Prompt, 3)
     // }
-    res.status(200).json({openseaUrl: 'https://testnets.opensea.io'})
+    res.status(200).json({openseaUrl: 'https://testnets.opensea.io/collections'})
 }
 
 export default handler

@@ -1,5 +1,6 @@
 import {ThirdwebStorage} from "@thirdweb-dev/storage"
 import fs from 'fs-extra'
+import pRetry from "p-retry"
 
 function readImageDirectory(dir) {
     const names = fs.readdirSync(dir)
@@ -24,7 +25,15 @@ export const uploadNftInfoToIpfs = async (name) => {
     try {
         const storage = new ThirdwebStorage()
         const images = readImageDirectory('./nft/images')
-        const imagesUris = await storage.uploadBatch(images)
+        const imagesUploadReq = async () => {
+            return storage.uploadBatch(images)
+        }
+        const imagesUris = await pRetry(imagesUploadReq, {
+            onFailedAttempt: error => {
+                console.error(`Attempt imagesUploadReq ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
+            },
+            retries: 10
+        })
 
         const modifiedMetadatas = []
         const metadatas = readMetadataDirectory('./nft/metadatas')
@@ -33,7 +42,15 @@ export const uploadNftInfoToIpfs = async (name) => {
             modifiedMetadata.image = 'https://ipfs.io/ipfs/' + imagesUris[i].replace('ipfs://', '')
             modifiedMetadatas.push(modifiedMetadata)
         }
-        const metadataUris = await storage.uploadBatch(modifiedMetadatas)
+        const metadatasUploadReq = async () => {
+            return storage.uploadBatch(modifiedMetadatas)
+        }
+        const metadataUris = await pRetry(metadatasUploadReq, {
+            onFailedAttempt: error => {
+                console.error(`Attempt metadatasUploadReq ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
+            },
+            retries: 10
+        })
 
         fs.writeFileSync('./nft/location.json', JSON.stringify({
             name: name,

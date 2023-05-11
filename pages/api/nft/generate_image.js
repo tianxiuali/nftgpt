@@ -20,7 +20,7 @@ const handler = async (req, res) => {
             content: '为以下描述给出dalle2的英文版提示Prompt，不要Prompt前缀：' + prompt
         }
     ]
-    const dalle2Prompt = await completions(messages)
+    const dalle2Prompt = (await completions(messages)).replaceAll('"', '').replace('.', '')
     const generatedImages = await generate(dalle2Prompt, 3)
     for (let i = 0; i < generatedImages.length; i++) {
         generatedImages[i] = 'data:image/png;base64,' + generatedImages[i]

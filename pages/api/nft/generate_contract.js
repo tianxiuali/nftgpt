@@ -36,7 +36,7 @@ const handler = async (req, res) => {
             content: '请从以下描述中提取主体名词，不要其他任何描述：' + dalle2Prompt
         }
     ]
-    const name = await completions(messages)
+    const name = (await completions(messages)).replace('主体名词：', '').replace('.', '').replace('。', '').replaceAll('"', '')
 
     const nftMetadatas = []
     for (let i = 0; i < nftImages.length; i++) {

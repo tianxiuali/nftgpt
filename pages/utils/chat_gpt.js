@@ -1,4 +1,5 @@
 import {OPENAI_API_HOST, SYSTEM_PROMPT} from '@/constant'
+import pRetry from "p-retry"
 
 const url = `${OPENAI_API_HOST}/v1/chat/completions`
 
@@ -7,7 +8,7 @@ export const config = {
 }
 
 export const completions = async messages => {
-    try {
+    const gptReq = async () => {
         const response = await fetch(url, {
             headers: {
                 'Content-Type': 'application/json',
@@ -28,7 +29,15 @@ export const completions = async messages => {
                 ]
             })
         })
-        const result = await response.json()
+        return await response.json()
+    }
+    try {
+        const result = await pRetry(gptReq, {
+            onFailedAttempt: error => {
+                console.error(`Attempt gptReq ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
+            },
+            retries: 10
+        })
         return result.choices[0].message.content
     } catch (error) {
         console.error(`chat_gpt completions error. param: %o. error: %o`, messages, error)

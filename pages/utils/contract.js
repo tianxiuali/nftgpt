@@ -2,13 +2,12 @@ import Web3 from 'web3'
 import solc from 'solc'
 import fs from 'fs-extra'
 import nftLocation from '../../nft/location.json'
-
+import pRetry from "p-retry"
 
 export const compileAndDeploy = async (userAddress) => {
-    // set the provider you want from Web3.providers
     const web3 = new Web3(new Web3.providers.HttpProvider('https://polygon-mumbai.g.alchemy.com/v2/mAXUxZ82WYt00fr2Uvqn1GcxkVlCzzUQ'))
 
-    // 编译合约
+    // compile
     let contractSource = '// SPDX-License-Identifier: MIT\n' +
         'pragma solidity ^0.8.0;\n' +
         '\n' +
@@ -39,7 +38,6 @@ export const compileAndDeploy = async (userAddress) => {
         '        tokenIdCounter.increment();\n' +
         '    }\n' +
         '}'
-    // const contractSource = source.replace(/\n/g, '').replace('```', '')
     const input = {
         language: 'Solidity',
         sources: {
@@ -55,9 +53,9 @@ export const compileAndDeploy = async (userAddress) => {
             }
         }
     }
-
     const erc721 = fs.readFileSync('./contracts/ERC721.sol', 'utf8')
     const counters = fs.readFileSync('./contracts/Counters.sol', 'utf8')
+
     function findImports(path) {
         if (path === '@openzeppelin/contracts/token/ERC721/ERC721.sol')
             return {
@@ -69,6 +67,7 @@ export const compileAndDeploy = async (userAddress) => {
             }
         } else return {error: 'File not found'}
     }
+
     const contractCompiled = JSON.parse(solc.compile(JSON.stringify(input), {import: findImports}))
 
     // 2. 部署合约
@@ -81,27 +80,44 @@ export const compileAndDeploy = async (userAddress) => {
     // 设置燃料上限
     const gasLimit = 3000000
     // 获取当前网络的平均燃料价格
-    const gasPrice = await web3.eth.getGasPrice()
+    const gasPriceReq = async () => {
+        return web3.eth.getGasPrice()
+    }
+    const gasPrice = await pRetry(gasPriceReq, {
+        onFailedAttempt: error => {
+            console.error(`Attempt gasPriceReq ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
+        },
+        retries: 10
+    })
+
+    // deploy
     const initContract = new web3.eth.Contract(contractAbi)
     console.log('nftLocation.name:', nftLocation.name)
     const contractDeploy = initContract.deploy({
-            data: contractBytecode,
+        data: contractBytecode,
         arguments: [nftLocation.name, nftLocation.name, `https://ipfs.io/ipfs/${nftLocation.metadatas}/`]
     })
-
     const deployTxParams = {
         from: account.address,
         gas: gasLimit,
         gasPrice: gasPrice,
         data: contractDeploy.encodeABI()
     }
-    // 对交易进行签名
-    const deploySignedTx = await account.signTransaction(deployTxParams)
-    // 发送交易并等待交易确认
-    const deployReceipt = await web3.eth.sendSignedTransaction(deploySignedTx.rawTransaction)
-    // 打印合约的地址
+    const deployReq = async () => {
+        // 对交易进行签名
+        const deploySignedTx = await account.signTransaction(deployTxParams)
+        // 发送交易并等待交易确认
+        return web3.eth.sendSignedTransaction(deploySignedTx.rawTransaction)
+    }
+    const deployReceipt = await pRetry(deployReq, {
+        onFailedAttempt: error => {
+            console.error(`Attempt deployReq ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
+        },
+        retries: 10
+    })
     console.log('Contract deployed at address:', deployReceipt.contractAddress)
 
+    // mint
     const aiNFTContract = new web3.eth.Contract(contractAbi, deployReceipt.contractAddress)
     const mintTxParams = {
         from: account.address,
@@ -109,9 +125,17 @@ export const compileAndDeploy = async (userAddress) => {
         gas: gasLimit,
         data: aiNFTContract.methods.mint(userAddress).encodeABI() // 要调用的合约方法及其参数
     }
-    // 对交易进行签名
-    const mintSignedTx = await account.signTransaction(mintTxParams)
-    // 发送交易并等待交易确认
-    const mintReceipt = await web3.eth.sendSignedTransaction(mintSignedTx.rawTransaction)
+    const mintReq = async () => {
+        // 对交易进行签名
+        const mintSignedTx = await account.signTransaction(mintTxParams)
+        // 发送交易并等待交易确认
+        return web3.eth.sendSignedTransaction(mintSignedTx.rawTransaction)
+    }
+    const mintReceipt = await pRetry(mintReq, {
+        onFailedAttempt: error => {
+            console.error(`Attempt mintReq ${error.attemptNumber} failed. There are ${error.retriesLeft} retries left.`)
+        },
+        retries: 10
+    })
     console.log('Contract mint receipt:', mintReceipt)
 }
