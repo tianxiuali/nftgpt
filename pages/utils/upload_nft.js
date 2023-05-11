@@ -1,32 +1,48 @@
-import {NFTStorage, File} from 'nft.storage'
+import {ThirdwebStorage} from "@thirdweb-dev/storage"
 import fs from 'fs-extra'
-import path from 'path'
 
-function readDirectory(dir) {
+function readImageDirectory(dir) {
     const names = fs.readdirSync(dir)
-    return names.map(name =>
-        new File([fs.readFileSync(dir + '/' + name)], name))
+    const files = []
+    names.map(name => {
+        files.push(fs.readFileSync(dir + '/' + name))
+    })
+    return files
 }
 
-export const uploadNftInfoToIpfs = async () => {
-    const images = readDirectory('./nft/images')
-    const nftStorage = new NFTStorage({token: process.env.NFT_STORAGE_API_KEY})
-    const imageCid = await nftStorage.storeDirectory(images)
-    console.log("images uploaded to: ", imageCid)
+function readMetadataDirectory(dir) {
+    const names = fs.readdirSync(dir)
+    const files = []
+    names.map(name => {
+        files.push(fs.readFileSync(dir + '/' + name, 'utf8'))
+    })
+    return files
+}
 
-    const metadatas = readDirectory('./nft/metadatas')
-    const modifiedMetadatas = await Promise.all(metadatas.map(async file => {
-        const obj = JSON.parse(await file.text())
-        obj.image = `ipfs://${imageCid.toString()}/${obj.image}`
-        return new File([JSON.stringify(obj)], file.name)
-    }))
-    const metadataCid = await nftStorage.storeDirectory(modifiedMetadatas)
-    console.log("metadata uploaded to: ", metadataCid)
 
-    const locationPath = path.join(__dirname, "./nft/location.json")
-    fs.writeFileSync(locationPath, JSON.stringify({
-        images: imageCid.toString(),
-        metadata: metadataCid.toString(),
-        count: metadatas.length
-    }, null, 2));
+export const uploadNftInfoToIpfs = async (name) => {
+    try {
+        const storage = new ThirdwebStorage()
+        const images = readImageDirectory('./nft/images')
+        const imagesUris = await storage.uploadBatch(images)
+
+        const modifiedMetadatas = []
+        const metadatas = readMetadataDirectory('./nft/metadatas')
+        for (let i = 0; i < metadatas.length; i++) {
+            let modifiedMetadata = JSON.parse(metadatas[i])
+            modifiedMetadata.image = 'https://ipfs.io/ipfs/' + imagesUris[i].replace('ipfs://', '')
+            modifiedMetadatas.push(modifiedMetadata)
+        }
+        const metadataUris = await storage.uploadBatch(modifiedMetadatas)
+
+        fs.writeFileSync('./nft/location.json', JSON.stringify({
+            name: name,
+            images: imagesUris[0].replace('ipfs://', '').replace('/0', ''),
+            metadatas: metadataUris[0].replace('ipfs://', '').replace('/0', ''),
+            count: metadatas.length
+        }, null, 2))
+    } catch (error) {
+        console.error(`upload_nft uploadNftInfoToIpfs error. error: ${error}`)
+        throw error
+    }
 }

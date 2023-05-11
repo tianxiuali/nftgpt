@@ -1,4 +1,17 @@
+import {removeFile} from "../../utils/remove_file"
+import {compileAndDeploy} from "../../utils/contract"
+
 const handler = async (req, res) => {
+    let body = req.body
+    if (typeof req.body === 'string') {
+        body = JSON.parse(req.body)
+    }
+    const {userAddress} = body
+
+    await compileAndDeploy(userAddress)
+    await removeFile('./nft')
+    await removeFile('./nft/images')
+    await removeFile('./nft/metadatas')
     // let body = req.body
     // if (typeof req.body === 'string') {
     //     body = JSON.parse(req.body)

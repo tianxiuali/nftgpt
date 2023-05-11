@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs'
 
 export const base64ToFile = async nftImages => {
     for (let i = 0; i < nftImages.length; i++) {

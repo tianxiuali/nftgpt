@@ -31,7 +31,7 @@ export const completions = async messages => {
         const result = await response.json()
         return result.choices[0].message.content
     } catch (error) {
-        console.error(error)
-        return new Response(error.message || 'Error', {status: 500})
+        console.error(`chat_gpt completions error. param: %o. error: %o`, messages, error)
+        throw error
     }
 }
