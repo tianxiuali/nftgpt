@@ -193,7 +193,7 @@ export default function ChatGPT() {
 
   return (
     <div className={styles.main} ref={mainRef}>
-      {conversation.length === 0 && <Title style={{ paddingTop: 20, textAlign: 'center' }}>ChatGPT</Title>}
+      {conversation.length === 0 && <Title style={{ paddingTop: 20, textAlign: 'center' }}>AI NFT</Title>}
       <ul className={styles.conversation} ref={convRef}>
         {conversation.map((item, i) => {
           const { id, role, content, type, imgList } = item
@@ -213,16 +213,16 @@ export default function ChatGPT() {
                 )}
                 {role === 'assistant' && (
                   <>
-                    <Avatar style={{ backgroundColor: '#6ea194' }} icon={<Openai style={{ fontSize: 18 }} />} />
+                    <Avatar style={{ backgroundColor: '#6ea194' }}>AI NFT</Avatar>
                     <span className={styles.content}>
                       {type === 'img' && imgList?.length > 0 && (
                         <div>
                           <div>请选择一张图片：</div>
                           <SelectImg imgList={imgList} onSelect={onSelectImg} />
-                          <div>然后为您生成合约代码</div>
+                          <div>然后为您生成合约代码，我们将用您选择的图片作为NFT的元数据</div>
                         </div>
                       )}
-                      {(type === 'md') && (
+                      {type === 'md' && (
                         <Markdown
                           markdown={content}
                           isChatGpt={true}

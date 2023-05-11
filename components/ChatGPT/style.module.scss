@@ -57,10 +57,8 @@
   text-align: center;
   background-color: #343541;
 
-  :global {
-    .ant-input-affix-wrapper {
-      width: 768px;
-    }
+  & > span {
+    width: 768px;
   }
 }
 
