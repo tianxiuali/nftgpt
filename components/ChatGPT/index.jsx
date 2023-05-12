@@ -113,9 +113,9 @@ export default function ChatGPT() {
       newConversation[newConversation.length - 1].imgList = images
       newConversation[newConversation.length - 1].type = 'img'
       setConversation(newConversation)
-      if (mainRef?.current) {
+      setTimeout(() => {
         mainRef.current.scrollTop = convRef.current.scrollHeight
-      }
+      }, 100)
     }
   }
 
@@ -158,9 +158,9 @@ export default function ChatGPT() {
       newConversation[newConversation.length - 1].content = contract
       newConversation[newConversation.length - 1].type = 'contract'
       setConversation(newConversation)
-      if (mainRef?.current) {
+      setTimeout(() => {
         mainRef.current.scrollTop = convRef.current.scrollHeight
-      }
+      }, 100)
     }
   }
 
@@ -190,9 +190,9 @@ export default function ChatGPT() {
       newConversation = [...newConversation]
       newConversation[newConversation.length - 1].content = `NFT已发布：[${openseaUrl}](${openseaUrl})`
       setConversation(newConversation)
-      if (mainRef?.current) {
+      setTimeout(() => {
         mainRef.current.scrollTop = convRef.current.scrollHeight
-      }
+      }, 100)
     }
     setIsStreaming(false)
     setIsWaiting(false)
