@@ -217,9 +217,8 @@ export default function ChatGPT() {
                     <span className={styles.content}>
                       {type === 'img' && imgList?.length > 0 && (
                         <div>
-                          <div>请选择一张图片：</div>
+                          <div>请选择一张图片，AI NFT将用您选择的图片作为NFT的元数据，并为您生成合约代码：</div>
                           <SelectImg imgList={imgList} onSelect={onSelectImg} />
-                          <div>然后为您生成合约代码，我们将用您选择的图片作为NFT的元数据</div>
                         </div>
                       )}
                       {type === 'md' && (
