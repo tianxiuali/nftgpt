@@ -135,7 +135,14 @@ export default function ChatGPT() {
       }
     ]
     setConversation(newConversation)
+    setTimeout(() => {
+      mainRef.current.scrollTop = convRef.current.scrollHeight
+    }, 100)
+    setIsStreaming(true)
+    setIsWaiting(true)
     await generateContract([src], newConversation)
+    setIsStreaming(false)
+    setIsWaiting(false)
   }
 
   const generateContract = async (nftImages, newConversation) => {
@@ -148,7 +155,7 @@ export default function ChatGPT() {
     const { contract } = await resp.json()
     if (contract) {
       newConversation = [...newConversation]
-      newConversation[newConversation.length - 1].content = `\`\`\`solidity\n${contract}\n\`\`\``
+      newConversation[newConversation.length - 1].content = contract
       newConversation[newConversation.length - 1].type = 'contract'
       setConversation(newConversation)
       if (mainRef?.current) {
@@ -166,6 +173,11 @@ export default function ChatGPT() {
       type: 'md'
     })
     setConversation(newConversation)
+    setTimeout(() => {
+      mainRef.current.scrollTop = convRef.current.scrollHeight
+    }, 100)
+    setIsStreaming(true)
+    setIsWaiting(true)
     const resp = await fetch('/api/nft/deploy_contract', {
       method: 'POST',
       body: JSON.stringify({
@@ -182,6 +194,8 @@ export default function ChatGPT() {
         mainRef.current.scrollTop = convRef.current.scrollHeight
       }
     }
+    setIsStreaming(false)
+    setIsWaiting(false)
   }
 
   useEffect(() => {
@@ -224,7 +238,6 @@ export default function ChatGPT() {
                       {type === 'md' && (
                         <Markdown
                           markdown={content}
-                          isChatGpt={true}
                           isStreaming={isStreaming && i === conversation.length - 1}
                           isWaiting={isWaiting && i === conversation.length - 1}
                         />
@@ -232,8 +245,7 @@ export default function ChatGPT() {
                       {type === 'contract' && (
                         <div className={styles.contract}>
                           <Markdown
-                            markdown={content}
-                            isChatGpt={true}
+                            markdown={`\`\`\`solidity\n${content}\n\`\`\``}
                             isStreaming={isStreaming && i === conversation.length - 1}
                             isWaiting={isWaiting && i === conversation.length - 1}
                           />
