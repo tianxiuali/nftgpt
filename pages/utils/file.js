@@ -1,6 +1,6 @@
-// js base64 array to files
-import fs from "fs";
+import fs from 'fs'
 
+// js base64 array to files
 export const base64ToFile = async nftImages => {
     for (let i = 0; i < nftImages.length; i++) {
         // Base64编码的图像数据

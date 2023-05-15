@@ -26,7 +26,9 @@
     "@thirdweb-dev/storage": "^1.1.2",
     "simple-json-db": "^2.0.0",
     "@openzeppelin/contracts": "^4.8.3",
-    "p-retry": "^4.6.1"
+    "p-retry": "^4.6.1",
+    "chai": "^4.3.4",
+    "mocha": "^10.2.0"
   },
   "devDependencies": {
     "sass": "^1.62.1"

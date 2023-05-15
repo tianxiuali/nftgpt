@@ -4,40 +4,9 @@ import fs from 'fs-extra'
 import nftLocation from '../../nft/location.json'
 import pRetry from "p-retry"
 
-export const compileAndDeploy = async (userAddress) => {
+export const compileAndDeploy = async (contractSource, userAddress) => {
     const web3 = new Web3(new Web3.providers.HttpProvider('https://polygon-mumbai.g.alchemy.com/v2/mAXUxZ82WYt00fr2Uvqn1GcxkVlCzzUQ'))
 
-    // compile
-    let contractSource = '// SPDX-License-Identifier: MIT\n' +
-        'pragma solidity ^0.8.0;\n' +
-        '\n' +
-        'import "@openzeppelin/contracts/token/ERC721/ERC721.sol";\n' +
-        'import "@openzeppelin/contracts/utils/Counters.sol";\n' +
-        '\n' +
-        'contract AiNFT is ERC721 {\n' +
-        '    using Counters for Counters.Counter;\n' +
-        '    Counters.Counter private tokenIdCounter;\n' +
-        '\n' +
-        '    string public baseURI;\n' +
-        '\n' +
-        '    constructor(\n' +
-        '        string memory _name,\n' +
-        '        string memory _symbol,\n' +
-        '        string memory _baseURI\n' +
-        '    ) ERC721(_name, _symbol) {\n' +
-        '        baseURI = _baseURI;\n' +
-        '    }\n' +
-        '\n' +
-        '    function _baseURI() internal view virtual override returns (string memory) {\n' +
-        '        return baseURI;\n' +
-        '    }\n' +
-        '\n' +
-        '    function mint(address _to) public payable {\n' +
-        '        uint256 tokenId = tokenIdCounter.current();\n' +
-        '        _mint(_to, tokenId);\n' +
-        '        tokenIdCounter.increment();\n' +
-        '    }\n' +
-        '}'
     const input = {
         language: 'Solidity',
         sources: {
@@ -137,5 +106,6 @@ export const compileAndDeploy = async (userAddress) => {
         },
         retries: 10
     })
-    console.log('Contract mint receipt:', mintReceipt)
+
+    return deployReceipt.contractAddress
 }
